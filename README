@@ -1,0 +1,12 @@
+Compiling:
+	- Verified to work with Visual Studio 2012
+	- Requires:
+		-Boost >=1.5.3: http://www.boost.org/ 
+		-Eigen 3: http://eigen.tuxfamily.org/index.php?title=Main_Page
+		- OpenCV: http://opencv.willowgarage.com/wiki/
+	- make a directory called "build"
+	- set EIGEN3_INCLUDE_DIR=/path/to/eigen3 (folder that contains headers)
+	- set BOOST_ROOT=/path/to/boost (path given by boost after running configure .\b2)
+	- cd build
+	- cmake -DBoost_USE_STATIC_LIBS=ON ..
+	- Open project in Visual Studio, compile Release

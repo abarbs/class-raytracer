@@ -1,0 +1,30 @@
+camera perspective 	1.5 0 2 	0 0 0 	0 0 1 	1 1 20
+resolution  	0.0185 0.0185
+viewport  	400 300
+# resolution  	0.00925 0.00925
+# viewport  	800 600
+
+light ID 0 inf 	9 9 8 	1 1 -1  	1 1 1  	1 0 0.000002 50 	shadow_on
+light ID 1 pnt 	9 9 8 	-7 -7 -7.3  	0.8 0.8 0.8  	1 0 0.000002 50 	shadow_off
+light ID 2 pnt 	0 -10 10 	0 1 -0.7	0.5 0.5 0.5 	1 0 0 	10	shadow_off
+
+
+
+mat ID 0 	1 1 1 	0.1 0.8 0.1 5 	0 0 0 
+mat ID 1 	1 1 1 	0.5 0.5 0 0	1 0 1.0
+mat ID 2 	1 0.5 0.5 	0.3 0.5 0.5 50 		0 0 0
+mat ID 3 	0.5 0.5 1 	0.3 0.5 0.5 50 		0 0 0
+mat ID 4 	0.5 0.5 1 	0.3 0.5 0.5 50 		0 1 0  
+mat ID 5 	0.5 0.5 1 	0.3 0.5 0.5 50 		0 0 0 
+
+render 0
+
+
+obj sphere ID 0 mat ID 1 	 1 0 1	0.5
+
+obj box ID 1 mat ID 0 	0 0 0 	1 0 0 0 1 0 0 0 1 	8 8 0.1
+obj box ID 2 mat ID 3 	0 0 1 	1 0 0 0 1 0 0 0 1 	1 1 1
+obj cylinder ID 3 mat ID 2 		-1 -2.5 0 	0 0 1 0.3 1
+obj cylinder ID 4 mat ID 3 		-1.5 -1.5 0 	0 0 1 0.3 1
+obj ellipsoid ID 5 mat ID 4 	-2.25 -2 1 	0.2 0.8 0.5
+# obj cylinder ID 4 mat ID 2 		0 -2.5 1 	
