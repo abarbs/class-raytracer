@@ -4,6 +4,7 @@
 #include <vector>
 #include <assert.h>
 #include <limits>
+#include <cmath>
 
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
@@ -55,7 +56,7 @@ public:
 		Eigen::Matrix4d &Q = quadrics[i]; 
 	    if ((remainder = pt.transpose() * Q * pt) > EPSILON)
 		return false;
-	    else if (abs(remainder) < EPSILON)
+	    else if (std::abs(remainder) < EPSILON)
 		onBoundary = true;
 	}
 	return onBoundary;
@@ -63,7 +64,7 @@ public:
 
     virtual double distToIntersection(const Ray &ray) {
 	double dist = std::numeric_limits<double>::infinity();
-	BOOST_ASSERT_MSG(abs(ray.dir.norm() - 1) < EPSILON, "Require unit direction vector!");
+	BOOST_ASSERT_MSG(std::abs(ray.dir.norm() - 1) < EPSILON, "Require unit direction vector!");
 	const Eigen::Vector4d &p0 = ray.origin,
 	    &u = ray.dir;
 	for (unsigned int i = 0; i < quadrics.size(); ++i) {
@@ -109,7 +110,7 @@ public:
 	for (unsigned int i = 0; i < quadrics.size(); ++i) {
 		Eigen::Matrix4d &Q = quadrics[i]; 
 	    double val = point.transpose() * Q * point;
-	    if (abs(val) < EPSILON) {
+	    if (std::abs(val) < EPSILON) {
 		return (2 * Q * point).cwiseProduct(Eigen::Vector4d(1, 1, 1, 0)).normalized();
 	    }
 	}
