@@ -1,3 +1,5 @@
+A raytracer written as an assignment for professor Sclaroff's computer graphics class at BU [](http://www.cs.bu.edu/fac/sclaroff/Courses.html)
+
 Compiling:
 	- Verified to work with Visual Studio 2012
 	- Requires:
