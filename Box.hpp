@@ -30,7 +30,7 @@ public:
 	BOOST_ASSERT_MSG(u[3] == 0 && v[3] == 0 && w[3] == 0, "u,v,w must have"
 			 " fourth coordinate equal to zero!");//  Got u:\n"
 			 // << u << "v:\n" << v << "w:\n" << w)
-;
+
 	// Prepare rotation matrix
 	Eigen::Matrix4d R;
 	R.row(0) = u;

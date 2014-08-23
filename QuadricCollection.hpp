@@ -51,13 +51,13 @@ public:
     Eigen::Vector4d center;
     bool onSurface(const Eigen::Vector4d &pt) {
 	bool onBoundary = false;
-	double remainder;
-	for (unsigned int i = 0; i < quadrics.size(); ++i) {
-		Eigen::Matrix4d &Q = quadrics[i]; 
-	    if ((remainder = pt.transpose() * Q * pt) > EPSILON)
-		return false;
-	    else if (std::abs(remainder) < EPSILON)
-		onBoundary = true;
+	double distToSurface;
+        // pt needs to be on or inside all quadrics to qualify as "on surface"
+	for (const auto& Q : quadrics) {
+                if ((distToSurface = pt.transpose() * Q * pt) > EPSILON)
+                    return false; // pt not in intersection of all quadrics
+                else if (std::abs(distToSurface) < EPSILON)
+                    onBoundary = true; // pt on surface of at least _one_ of the quadrics
 	}
 	return onBoundary;
     }

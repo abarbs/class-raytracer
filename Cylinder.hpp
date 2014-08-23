@@ -27,9 +27,9 @@ public:
 
 	/* Find rotation taking z axis to n */
 	const double dotProd = n.dot(Eigen::Vector3d::UnitZ());
-	const Eigen::Vector3d rotAxis = (1 - abs(dotProd) < EPSILON) ? 
+	const Eigen::Vector3d rotAxis = (1 - std::abs(dotProd) < EPSILON) ? 
 	    Eigen::Vector3d::UnitX() : Eigen::Vector3d::UnitZ().cross(n);
-	const double theta = acos(dotProd);
+	const double theta = std::acos(dotProd);
 	Eigen::Matrix3d rotMatrix;
 	rotMatrix = Eigen::AngleAxisd(theta, rotAxis);
 	

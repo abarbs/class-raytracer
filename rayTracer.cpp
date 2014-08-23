@@ -131,7 +131,7 @@ intersection_t getIntersection(const Ray &ray) {
 }
 
 Eigen::Vector4d getColor(const Ray &ray, unsigned int recursionLevel, unsigned int transDepth) {
-    BOOST_ASSERT_MSG(abs(1 - ray.dir.norm()) < EPSILON, "Got ray with non-unit direction");
+    BOOST_ASSERT_MSG(std::abs(1 - ray.dir.norm()) < EPSILON, "Got ray with non-unit direction");
     static int objStack[MAX_DEPTH + 1] = {ID_AIR};
     const intersection_t isect = getIntersection(ray);
     int objId;

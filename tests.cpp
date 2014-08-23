@@ -175,13 +175,13 @@ BOOST_AUTO_TEST_CASE(distToIntersectSphere) {
 	0, 0, 0, -1;
     Ray r(Eigen::Vector4d(0, 0, 0, 1), Eigen::Vector4d(5, 5, 3, 0).normalized());
     qc.addQuadric(sphere);
-    BOOST_CHECK(abs(qc.distToIntersection(r)- sqrt(59)) < EPSILON);
+    BOOST_CHECK(std::abs(qc.distToIntersection(r)- sqrt(59)) < EPSILON);
 
     /* Make a ray originating on top of sphere heading through south pole, check
        that distance is approximately equal to radius */
     Ray rp(Eigen::Vector4d(5,5,7,1), Eigen::Vector4d(0, 0, -1, 0));
     double dist = qc.distToIntersection(rp);
-    BOOST_CHECK_MESSAGE(abs(dist-4) < EPSILON, 
+    BOOST_CHECK_MESSAGE(std::abs(dist-4) < EPSILON, 
 		    "Got distance to intersection as " << dist);
 }
 
