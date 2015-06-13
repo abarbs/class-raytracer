@@ -3,7 +3,7 @@ project (RAYTRACER)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-include_directories(${RAYTRACER_SOURCE_DIR})
+include_directories(${RAYTRACER_SOURCE_DIR}/src)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -msse2")
@@ -37,9 +37,9 @@ endif()
 include_directories(${TBB_INCLUDE_DIRS})
 link_directories(${TBB_LIBRARY_DIRS})
 
-add_executable(rayTracer rayTracer.cpp)
+add_executable(rayTracer src/rayTracer.cpp)
 target_link_libraries(rayTracer ${Boost_LIBRARIES} ${TBB_LIBRARIES})
 
-add_executable(test tests.cpp rayTracer.cpp)
+add_executable(test test/tests.cpp src/rayTracer.cpp)
 set_target_properties(test PROPERTIES COMPILE_DEFINITIONS "_UNIT_TESTS")
 target_link_libraries(test ${Boost_LIBRARIES} ${TBB_LIBRARIES})
