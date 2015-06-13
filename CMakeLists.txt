@@ -11,10 +11,8 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 
 if (MSVC)
   add_definitions(/arch:SSE2)
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /DNDEBUG")  
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /DNDEBUG")
 endif(MSVC)
-
-find_package(OpenCV REQUIRED)
 
 find_package(Boost COMPONENTS unit_test_framework regex REQUIRED)
 if(NOT Boost_FOUND)
@@ -31,10 +29,8 @@ endif(NOT EIGEN3_INCLUDE_DIR)
 include_directories (${EIGEN3_INCLUDE_DIR})
 
 add_executable(rayTracer rayTracer.cpp)
-target_link_libraries(rayTracer ${Boost_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(rayTracer ${Boost_LIBRARIES})
 
 add_executable(test tests.cpp rayTracer.cpp)
 set_target_properties(test PROPERTIES COMPILE_DEFINITIONS "_UNIT_TESTS")
-target_link_libraries(test ${Boost_LIBRARIES} ${OpenCV_LIBS})
-
-
+target_link_libraries(test ${Boost_LIBRARIES})
