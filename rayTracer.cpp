@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <limits>
 
+#include <tbb/tbb.h>
+
 #include <boost/algorithm/string/trim.hpp>
 #include <Eigen/StdVector>
 
@@ -15,6 +17,7 @@
 #include "Cylinder.hpp"
 #include "Box.hpp"
 #include "Ray.hpp"
+#include "RandomAASampler.hpp"
 #include "consts.hpp"
 
 typedef struct intersection {
@@ -22,11 +25,14 @@ typedef struct intersection {
     double dist;
 } intersection_t;
 
-void parseModelFile(std::istream& input, SceneDescription& scene);
+void parseModelFile(std::istream &input, SceneDescription &scene);
 std::unique_ptr<unsigned char[]> getRaster();
-void writePPM(std::unique_ptr<unsigned char[]> buf, unsigned int rows, unsigned int cols, std::string filename);
-Eigen::Vector4d getColor(const Ray&, intersection_t, unsigned int recursionLevel, unsigned int transDepth);
-intersection_t getIntersection(const Ray&);
+void writePPM(std::unique_ptr<unsigned char[]> buf, unsigned int rows,
+              unsigned int cols, std::string filename);
+Eigen::Vector4d getColor(const Ray &, intersection_t,
+                         unsigned int recursionLevel, unsigned int transDepth,
+                         std::array<int, MAX_DEPTH + 1> objStack);
+intersection_t getIntersection(const Ray &);
 bool refract;
 bool reflect;
 bool aa;
@@ -130,9 +136,9 @@ intersection_t getIntersection(const Ray &ray) {
     return result;
 }
 
-Eigen::Vector4d getColor(const Ray &ray, unsigned int recursionLevel, unsigned int transDepth) {
+Eigen::Vector4d getColor(const Ray &ray, unsigned int recursionLevel, unsigned int transDepth,
+                         std::array<int, MAX_DEPTH + 1> &objStack) {
     BOOST_ASSERT_MSG(std::abs(1 - ray.dir.norm()) < EPSILON, "Got ray with non-unit direction");
-    static int objStack[MAX_DEPTH + 1] = {ID_AIR};
     const intersection_t isect = getIntersection(ray);
     int objId;
     if ((objId = isect.objId) < 0) return Eigen::Vector4d::Zero();
@@ -201,7 +207,7 @@ Eigen::Vector4d getColor(const Ray &ray, unsigned int recursionLevel, unsigned i
         // Compute intensity of reflected ray, if necessary
         if (reflect && mat.Kr > 0)	{
             Ray reflectionRay(pointOfIntersection,  ray.dir - (2 * N.dot(ray.dir)) * N, nextObjId);
-            I += mat.Kr * getColor(reflectionRay, recursionLevel + 1, nextTransDepth);
+            I += mat.Kr * getColor(reflectionRay, recursionLevel + 1, nextTransDepth, objStack);
         }
 
         // Compute intensity of transmission ray, if necessary
@@ -220,7 +226,7 @@ Eigen::Vector4d getColor(const Ray &ray, unsigned int recursionLevel, unsigned i
             const double n = etaIncident/etaRefract;
             const double cosThetaR = sqrt(1 - (n * n) * (1 - cosThetaI * cosThetaI));
             Ray T(pointOfIntersection, (n * ray.dir - (cosThetaR - n * cosThetaI) * N).normalized(), nextObjId);
-            I += mat.Kt * getColor(T, recursionLevel + 1, nextTransDepth);
+            I += mat.Kt * getColor(T, recursionLevel + 1, nextTransDepth, objStack);
         }
     }
 
@@ -229,35 +235,50 @@ Eigen::Vector4d getColor(const Ray &ray, unsigned int recursionLevel, unsigned i
 }
 
 std::unique_ptr<unsigned char[]> getRaster() {
-    const unsigned int row_bytes = scene.cam.viewportWidth * 3;
-    const unsigned int buf_len = scene.cam.viewportHeight * row_bytes;
-    auto buf = std::unique_ptr<unsigned char[]> (new unsigned char[buf_len]);
-    std::vector<Ray, Eigen::aligned_allocator<Ray> > rays(NUM_AA_SUBPIXELS,
-                  Ray(Eigen::Vector4d(0, 0, 0, 1), Eigen::Vector4d(1, 0, 0, 0), ID_AIR));
-    double multFactor = 1/(1.0 * NUM_AA_SUBPIXELS);
-    const Eigen::Vector4d maxrgb(255, 255, 255, 0);
-    for (int row = 0; row < scene.cam.viewportHeight; ++row) {
-        for (int col = 0; col < scene.cam.viewportWidth; ++col) {
+  const unsigned int row_bytes = scene.cam.viewportWidth * 3;
+  const unsigned int buf_len = scene.cam.viewportHeight * row_bytes;
+  auto buf = std::unique_ptr<unsigned char[]>(new unsigned char[buf_len]);
+  const double multFactor = 1 / (1.0 * NUM_AA_SUBPIXELS);
+  const Eigen::Vector4d maxrgb(255, 255, 255, 0);
+  tbb::parallel_for(
+      tbb::blocked_range2d<int, int>(0, scene.cam.viewportHeight, 0,
+                                     scene.cam.viewportWidth),
+      [&](tbb::blocked_range2d<int, int> &r) {
+
+        // Support for AA sampler
+        std::vector<Ray, Eigen::aligned_allocator<Ray>> rays(
+            NUM_AA_SUBPIXELS, Ray(Eigen::Vector4d(0, 0, 0, 1),
+                                  Eigen::Vector4d(1, 0, 0, 0), ID_AIR));
+        RandomAASampler sampler(scene.cam);
+
+        for (int row = r.rows().begin(); row != r.rows().end(); ++row) {
+          for (int col = r.cols().begin(); col != r.cols().end(); ++col) {
+            Camera cam(scene.cam);
             Eigen::Vector4d color = Eigen::Vector4d::Zero();
+            // materials stack for refraction
+            std::array<int, MAX_DEPTH + 1> objStack;
             if (!aa) {
-                Ray ray = scene.cam.constructRayThroughPixel(col, row);
-                color = getColor(ray, 0, 0);
+              Ray ray = cam.constructRayThroughPixel(col, row);
+              objStack.fill(ID_AIR);
+              color = getColor(ray, 0, 0, objStack);
             } else {
-                scene.cam.constructRaysThroughPixel(col, row, rays);
-                for (int i = 0; i < NUM_AA_SUBPIXELS; ++i) {
-                    color += getColor(rays[i], 0, 0);
-                }
-                color *= multFactor;
+              sampler.constructRaysThroughPixel(col, row, rays);
+              for (int i = 0; i < NUM_AA_SUBPIXELS; ++i) {
+                objStack.fill(ID_AIR);
+                color += getColor(rays[i], 0, 0, objStack);
+              }
+              color *= multFactor;
             }
 
             color = 255 * color;
             color = color.cwiseMin(maxrgb);
-            buf[row*row_bytes + (col*3)] = color[0];
-            buf[row*row_bytes + (col*3) + 1] = color[1];
-            buf[row*row_bytes + (col*3) + 2] = color[2];
+            buf[row * row_bytes + (col * 3)] = color[0];
+            buf[row * row_bytes + (col * 3) + 1] = color[1];
+            buf[row * row_bytes + (col * 3) + 2] = color[2];
+          }
         }
-    }
-    return buf;
+      });
+  return buf;
 }
 
 void writePPM(std::unique_ptr<unsigned char[]> buf, unsigned int rows,

@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.8)
 project (RAYTRACER)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+
 include_directories(${RAYTRACER_SOURCE_DIR})
 
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -28,9 +30,16 @@ if( NOT EIGEN3_INCLUDE_DIR )
 endif(NOT EIGEN3_INCLUDE_DIR)
 include_directories (${EIGEN3_INCLUDE_DIR})
 
+find_package(TBB)
+if (NOT TBB_FOUND)
+  message(FATAL_ERROR "TBB not found, please install TBB")
+endif()
+include_directories(${TBB_INCLUDE_DIRS})
+link_directories(${TBB_LIBRARY_DIRS})
+
 add_executable(rayTracer rayTracer.cpp)
-target_link_libraries(rayTracer ${Boost_LIBRARIES})
+target_link_libraries(rayTracer ${Boost_LIBRARIES} ${TBB_LIBRARIES})
 
 add_executable(test tests.cpp rayTracer.cpp)
 set_target_properties(test PROPERTIES COMPILE_DEFINITIONS "_UNIT_TESTS")
-target_link_libraries(test ${Boost_LIBRARIES})
+target_link_libraries(test ${Boost_LIBRARIES} ${TBB_LIBRARIES})
