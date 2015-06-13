@@ -2,8 +2,9 @@ A raytracer written as an assignment for professor Sclaroff's computer graphics 
 
 Compiling:
 	- Requires:
-		-Boost >=1.5.3: http://www.boost.org/ 
+		-Boost >=1.5.3: http://www.boost.org/
 		-Eigen 3: http://eigen.tuxfamily.org/index.php?title=Main_Page
+                -Intel TBB (supporting TBB_INTERFACE_VERSION_MAJOR == 7)
 	- make a directory called "build"
 	- set EIGEN3_INCLUDE_DIR=/path/to/eigen3 (folder that contains the Eigen directory)
 	- set BOOST_ROOT=/path/to/boost (path given by boost after running configure .\b2)
